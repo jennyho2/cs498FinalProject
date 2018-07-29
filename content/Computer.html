@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+<style>
+
+.rectangle {
+	fill: steelblue;
+}
+.rectangle:hover {
+	fill: orange;
+}
+.axis {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+.bar {
+  fill: steelblue;
+}
+.axis text {
+  font: 10px sans-serif;
+}
+.x.axis path {
+  display: none;
+}
+.salary {
+	font-size: 20px;
+    background-color: lightblue;
+
+}
+
+div.tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: 80px;					
+    height: 28px;					
+    padding: 2px;				
+    font: 12px sans-serif;		
+    background: lightsteelblue;	
+    border: 0px;		
+    border-radius: 8px;			
+    pointer-events: none;			
+}
+.container {
+    position: relative;
+    font-family: Arial;
+}
+
+.text-block {
+    position: absolute;
+    bottom: 400px;
+    right: 60px;
+    left: 1000px;
+    background-color: rgba(211,211,211,.5);
+    color: white;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+.text{
+	color: black;
+}
+</style>
+</head>
+
+<body>
+<div id="drop" align=center>
+	<p class="salary">
+		<b>Selected Salary: $</b>
+		<b id="selectedSalary" ></b>
+	</p>
+</div>
+<svg class="chart"></svg>
+<div class="container">
+  <div class="text-block">
+  	<div class="text">
+	    <h4>Note:</h4>
+	    <p>The ratio between "9-12" hours and "5-8" hours begins to migrate from 1:2 to 1:1 for  salaries greater than $180k.</p>
+    </div>
+  </div>
+</div>
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+document.getElementById("selectedSalary").innerHTML = sessionStorage.getItem("selectedSalary");
+
+Array.prototype.unique = function() {
+    var arr = [];
+    for(var i = 0; i < this.length; i++) {
+        if(!arr.includes(this[i])) {
+            arr.push(this[i]);
+        }
+    }
+    return arr; 
+}
+
+Object.defineProperties(Array.prototype, {
+    count: {
+        value: function(query) {
+            var count = 0;
+            for(let i=0; i<this.length; i++)
+                if (this[i]==query)
+                    count++;
+            return count;
+        }
+    }
+});
+
+d3.csv("../data/testDetails.csv", function(data) {
+	
+	var salary = [];
+	data.forEach(function(d){
+		if(d.Salary!='NA' && d.Salary!=""){
+			salary.push(parseInt(d.Salary.substring(0, d.Salary.length-1)),10);
+		}
+	});
+	salary = salary.unique().sort(function(a,b){
+    	return a-b;
+	});
+	
+	
+
+	// SELECTION STARTS HERE --------------------------->
+	var selector = d3.select("#drop")
+    	.append("select")
+    	.attr("id","dropdown")
+	    .on("change", function(d){
+	    	var selection = document.getElementById("dropdown");
+    	    sessionStorage.setItem("selectedSalary", selection.value);
+    	    document.getElementById("selectedSalary").innerHTML = sessionStorage.getItem("selectedSalary");
+	    	graphFunct(selection.value);
+	    });
+	selector.selectAll("option")
+      	.data(salary)
+	    .enter().append("option")
+	    .attr("value", function(d){
+	        return d;
+	    })
+	    .text(function(d){
+	        return d;
+	    })
+	//<---------------------------------------------------
+	var selection = sessionStorage.getItem("selectedSalary");
+	var data = data.filter(function(d){return d.Salary==selection+'K'});
+	//push by hours
+	var hours_key = [];
+	var hours = [];
+	data.forEach(function(d){
+		if(d.Hours!='NA'){
+			hours_key.push(d.Hours);
+			hours.push(d.Hours);
+		}
+	});
+	hours_key = hours.unique().sort(function(a,b){
+		if(a=='<1'){
+			return -1;
+		}
+		if(b=='<1'){
+			return 1;
+		}
+		if(a=='1-4'){
+			return -1;
+		}
+		if(b=='1-4'){
+			return 1;
+		}
+		if(a=='5-8'){
+			return -1;
+		}
+		if(b=='5-8'){
+			return 1;
+		}
+		if(a=='9-12'){
+			return -1;
+		}
+		if(b=='9-12'){
+			return 1;
+		}
+		if(b=='>12'){
+			return 1;
+		}
+		if(a=='>12'){
+			-1;
+		}
+	});
+	hours_count = [];
+	for(let i=0; i < hours_key.length; i++){
+		hours_count.push(hours.count(hours_key[i]));
+	}
+
+	//GRAPHING STARTING HERE ------------------------------>
+
+	var margin = {top: 80, right: 180, bottom: 80, left: 180},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+	var svg = d3.select("body").append("svg")
+	.attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+	.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	var y = d3.scale.linear()
+		.domain([0, d3.max(hours_count, function(d){
+			return +d;
+		})])
+		.range([height, 0]);
+
+	var x = d3.scale.ordinal()
+		.domain(hours_key.map(function(d){ return d;}))
+		.rangeBands([0, width]);
+
+	var xAxis = d3.svg.axis()
+		.scale(x)
+	    .orient("bottom");
+
+	var yAxis = d3.svg.axis()
+		.scale(y)
+	    .orient("left");
+
+
+	var chart = d3.select(".chart")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", height + margin.top + margin.bottom)
+	  	.append("g")
+	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	var barWidth = width / (hours_count.length + 2);
+
+	// Define the div for the tooltip
+	var div = d3.select("body").append("div")	
+    	.attr("class", "tooltip")				
+    	.style("opacity", 0);
+
+  	chart.append("g")
+      	.attr("class", "x axis")
+      	.attr("transform", "translate(0," + height + ")")
+      	.call(xAxis);
+
+  	chart.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+    var data_total = [];
+    for (i = 0; i < hours_key.length; i++) { 
+    	data_total.push(
+    		{'name':hours_key[i], 'value':hours_count[i]});
+	}
+	console.log(data_total);
+
+	chart.selectAll(".bar")
+      	.data(data_total)
+    	.enter().append("rect")
+      	.attr("class", "bar")
+      	.attr("x", function(d) { return x(d.name); })
+      	.attr("y", function(d) { return y(d.value); })
+      	.attr("height", function(d) { return height - y(d.value); })
+      	.attr("width", barWidth)
+      	.on("mouseover", function(d) {		//tooltip
+            div.transition()		
+                .duration(200)		
+                .style("opacity", .9);		
+            div	.html(
+            	"Hours: " + d.name + "<br/>" + 
+            	"Count: " + d.value + "<br/>"
+            	)
+            	.style("left", (d3.event.pageX) + "px")
+            	.style("top", (d3.event.pageY - 28) + "px");	
+            })					
+        .on("mouseout", function(d) {		
+            div.transition()		
+                .duration(500)		
+                .style("opacity", 0);	
+        	})
+
+    chart.append("g")
+	    .attr("class", "axis")
+	  	.append("text")
+	    .attr("transform", "rotate(-90)")
+	    .attr("y", -40)
+	    .attr("x", -200)
+	    .attr("dy", ".71em")
+	    .style("text-anchor", "end")
+	    .style("font-size", "14px")
+	    .text("Count");
+
+	chart.append("g")
+	    .attr("class", "x axis")
+	  	.append("text")
+	    .attr("x", 470)
+	    .attr("y", height + 40)
+	    .attr("dx", "1em")
+	    .style("text-anchor", "end")
+	    .style("font-size", "14px")
+	    .text("Hours on Computer per Day");
+
+	chart.append("g") 			//title
+	    .attr("class", "x axis")
+	  	.append("text")
+	    .attr("x", 600)
+	    .attr("y", -10)
+	    .attr("dx", "1em")
+	    .style("text-anchor", "end")
+	    .text("Lifestyle Habits for Software Engineers with $"+sessionStorage.getItem("selectedSalary")+ " Salary")
+        .style("font-size", "20px");
+
+
+});
+
+function graphFunct(selection){
+
+	console.log("graphing");
+d3.csv("../data/testDetails.csv", function(data) {
+	console.log("graphing");
+	console.log(selection);
+	var data = data.filter(function(d){return d.Salary==selection+'K'});
+
+	console.log(data);
+	//push by hours
+	var hours_key = [];
+	var hours = [];
+	data.forEach(function(d){
+		if(d.Hours!='NA'){
+			hours_key.push(d.Hours);
+			hours.push(d.Hours);
+		}
+	});
+	hours_key = hours.unique().sort(function(a,b){
+		if(a=='<1'){
+			return -1;
+		}
+		if(b=='<1'){
+			return 1;
+		}
+		if(a=='1-4'){
+			return -1;
+		}
+		if(b=='1-4'){
+			return 1;
+		}
+		if(a=='5-8'){
+			return -1;
+		}
+		if(b=='5-8'){
+			return 1;
+		}
+		if(a=='9-12'){
+			return -1;
+		}
+		if(b=='9-12'){
+			return 1;
+		}
+		if(b=='>12'){
+			return 1;
+		}
+		if(a=='>12'){
+			-1;
+		}
+	});
+	hours_count = [];
+	for(let i=0; i < hours_key.length; i++){
+		hours_count.push(hours.count(hours_key[i]));
+	}
+
+	//GRAPHING STARTING HERE ------------------------------>
+
+	var margin = {top: 80, right: 180, bottom: 80, left: 180},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+    d3.select("svg").selectAll("*").remove();
+	var svg = d3.select("body").append("svg")
+	.attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+	.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	var y = d3.scale.linear()
+		.domain([0, d3.max(hours_count, function(d){
+			return +d;
+		})])
+		.range([height, 0]);
+
+	var x = d3.scale.ordinal()
+		.domain(hours_key.map(function(d){ return d;}))
+		.rangeBands([0, width]);
+
+	var xAxis = d3.svg.axis()
+		.scale(x)
+	    .orient("bottom");
+
+	var yAxis = d3.svg.axis()
+		.scale(y)
+	    .orient("left");
+
+
+	var chart = d3.select(".chart")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", height + margin.top + margin.bottom)
+	  	.append("g")
+	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	var barWidth = width / (hours_count.length + 2);
+
+	// Define the div for the tooltip
+	var div = d3.select("body").append("div")	
+    	.attr("class", "tooltip")				
+    	.style("opacity", 0);
+
+  	chart.append("g")
+      	.attr("class", "x axis")
+      	.attr("transform", "translate(0," + height + ")")
+      	.call(xAxis);
+
+  	chart.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+    var data_total = [];
+    for (i = 0; i < hours_key.length; i++) { 
+    	data_total.push(
+    		{'name':hours_key[i], 'value':hours_count[i]});
+	}
+
+
+
+	chart.selectAll(".bar")
+      	.data(data_total)
+    	.enter().append("rect")
+      	.attr("class", "bar")
+      	.attr("x", function(d) { return x(d.name); })
+      	.attr("y", function(d) { return y(d.value); })
+      	.attr("height", function(d) { return height - y(d.value); })
+      	.attr("width", barWidth)
+      	.on("mouseover", function(d) {		//tooltip
+            div.transition()		
+                .duration(200)		
+                .style("opacity", .9);		
+            div	.html(
+            	"Salary: $" + d.name + "<br/>" + 
+            	"Count: " + d.value + "<br/>"
+            	)
+            	.style("left", (d3.event.pageX) + "px")
+            	.style("top", (d3.event.pageY - 28) + "px");	
+            })					
+        .on("mouseout", function(d) {		
+            div.transition()		
+                .duration(500)		
+                .style("opacity", 0);	
+        	})
+    
+
+    chart.append("g")
+	    .attr("class", "axis")
+	  	.append("text")
+	    .attr("transform", "rotate(-90)")
+	    .attr("y", -40)
+	    .attr("x", -200)
+	    .attr("dy", ".71em")
+	    .style("text-anchor", "end")
+	    .style("font-size", "14px")
+	    .text("Count");
+
+	chart.append("g")
+	    .attr("class", "x axis")
+	  	.append("text")
+	    .attr("x", 470)
+	    .attr("y", height + 40)
+	    .attr("dx", "1em")
+	    .style("text-anchor", "end")
+	    .style("font-size", "14px")
+	    .text("Hours on Computer per Day");
+
+	chart.append("g") 		
+		//title
+	    .attr("class", "x axis")
+	  	.append("text")
+	    .attr("x", 600)
+	    .attr("y", -10)
+	    .attr("dx", "1em")
+	    .style("text-anchor", "end")
+	     .text("Lifestyle Habits for Software Engineers with $"+sessionStorage.getItem("selectedSalary")+ " Salary")
+        .style("font-size", "20px");
+});
+}
+</script>

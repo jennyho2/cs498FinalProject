@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html>
+    <body>
+        <h3>Data/Background</h3>
+        <p>
+            For my final project, I chose to continue with my midterm project on the Stack Overflow 2018 Developer Survey on Kaggle (https://www.kaggle.com/stackoverflow/stack-overflow-2018-developer-survey). This dataset focuses on how developers in industry view technology and their careers. Over 100,000 devlopers responded to the survey, with a wide range of geographical location and specialties. The dataset I focused on was on responses from developers in the U.S. only. I prepared my data on Tableau, and then converted it into a csv file to link to d3.
+        </p>
+
+        <h3>Visual Narrative Model</h3>
+        <p>
+            I chose to present the data following the martini glass visual narrative structure. This model was chosen because I wanted the user to be able to freely browse through the data, and yet be able to make conclusions. It also fit my data and findings well, since the overall focus is only on salary of developers, but every developer leads his or her own lifestyle. 
+            The martini structure begins with an overall view of the salary distribution of software engineers, and in the details page it breaks down into two smaller details, both still related to the salary.
+        </p>
+
+        <h3>Graphs</h3>
+        <p>
+            The general salary distribution graph is identical to the one presented in my midterm project (https://public.tableau.com/profile/jenny.ho#!/vizhome/surveyMidtermProject/Dashboard), but I restructed the detailed graphs to bar graphs in order to let the user filter the data by salary.
+        </p>
+
+        <h3>Annotations/Parameters/Triggers</h3>
+        <p>
+            1)    I believe the data is pretty straightfoward, so I only added 1 annotation to each detail. The annotations remains in place in order to guide the user (ex: $180k and onward for Hours Spend on Computer). I did not want the note to only appear at a certain salary, in order to avoid the risk that the user will not click on that salary. <br><br>
+
+            2)    "Selected Salary" was used as both a parameter and trigger. I originally wanted the user to be directed to the general page first, and then be able explore the data by clicking on the bars, but I was not able to get this feature to work. I also could not get the dropdown menu to default to a number, so I added the "Selected Salary" section at the top of each detail page in an attempt to give the user more consistency between each page. When the user selects a "Select Salary", it acts as a trigger to filter out the data for both graphs. Finally, the "Selected Salary" was also included in the title of each graph, also an attempt for consistency and to prevent the user from getting confused by all the numbers in the drop down menu.<br><br>
+
+            3)    Axes on the graph were styled to be in the same x,y coordinates and font for consistency and to avoid distracting the user. <br><br>
+        </p>
+
+    </body>
+</html>

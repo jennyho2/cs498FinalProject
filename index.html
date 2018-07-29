@@ -1,28 +1,106 @@
 <!DOCTYPE html>
+<meta charset="utf-8" content="width=device-width, initial-scale=1">
+
+<style>
+/* Style the tab */
+.tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    font-size: 17px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+    background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+    background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+
+.title {
+	text-align: center;
+}
+
+</style>
+
+<script type="text/javascript">
+	function openCity(evt, cityName) {
+    // Declare all variables
+    var i, tabcontent, tablinks;
+
+    // Get all elements with class="tabcontent" and hide them
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    // Get all elements with class="tablinks" and remove the class "active"
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById(cityName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+</script>
+
 <html>
-	<head>
-		<title>Hank Quinlan, Horrible Cop</title>
-	</head>
+	<header>
+		<div class="title">
+			<h1>CS498 Data Visualization Final Project</h1>
+		</div>
+	</header>
+	
 	<body>
-		<nav>
-    		<ul>
-        		<li><a href="/">Home</a></li>
-	        	<li><a href="/about">About</a></li>
-        		<li><a href="/cv">CV</a></li>
-        		<li><a href="/blog">Blog</a></li>
-    		</ul>
-		</nav>
-		<div class="container">
-    		<div class="blurb">
-        		<h1>Hi there, I'm Hank Quinlan!</h1>
-				<p>I'm best known as the horrible cop from <em>A Touch of Evil</em> Don't trust me. <a href="/about">Read more about my life...</a></p>
-    		</div><!-- /.blurb -->
-		</div><!-- /.container -->
-		<footer>
-    		<ul>
-        		<li><a href="mailto:hankquinlanhub@gmail.com">email</a></li>
-        		<li><a href="https://github.com/hankquinlan">github.com/hankquinlan</a></li>
-			</ul>
-		</footer>
+
+	<!-- TAB BAR -->
+	<div class="tab">
+	  	<button class="tablinks" onclick="openCity(event, 'Essay')">Essay</button>
+	  	<button class="tablinks" onclick="openCity(event, 'General')">General</button>
+	  	<button class="tablinks" onclick="openCity(event, 'Details')">Details</button>
+	</div>
+
+	<!-- TAB CONTENT -->
+	<div id="Essay" class="tabcontent">
+		<h3>Essay</h3>
+		<object type="text/html" height="700" width="1400" data="content/Essay.html"></object>
+	</div>
+
+	<div id="General" class="tabcontent">
+		<div class="height">
+		  	<h3>General</h3>
+		  	<object type="text/html" height="700" width="1400" data="content/SalaryDistribution.html"></object>
+	  	</div>
+	</div>
+
+	<div id="Details" class="tabcontent">
+		<object type="text/html" height="900" width="1400" data="content/Details.html">
+	</div>
 	</body>
+
 </html>
+
